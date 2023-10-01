@@ -10,10 +10,7 @@ import io.github.lucianodacunha.screenmatch.util.GetAPIKey;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -62,12 +59,12 @@ public class Main {
                 .limit(5)
                 .forEach(System.out::println);
 
-        List<Episode> episodios = seasons.stream()
+        List<Episode> epsodes = seasons.stream()
                 .flatMap(t -> t.episodes().stream()
                         .map(d -> new Episode(t.number(), d)))
                 .collect(Collectors.toList());
 
-        episodios.forEach(System.out::println);
+        epsodes.forEach(System.out::println);
 
         System.out.print("What year do you want to watch the episodes from? ");
         var ano = Integer.parseInt(input.nextLine());
@@ -76,11 +73,26 @@ public class Main {
 
         DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        episodios.stream()
+        epsodes.stream()
                 .filter(e -> e.getReleased() != null && e.getReleased().isAfter(dataBusca))
                 .forEach(e -> System.out.println(
-                        "Season:  " + e.getSeason() +
-                                " Episode: " + e.getTitle() +
+                        "Season:  " + e.getSeason() + " Episode: " + e.getTitle() +
                                 " Released: " + e.getReleased().format(formatador)));
+
+        Map<Integer, Double> ratingBySeason = epsodes.stream()
+                .filter(e -> e.getRating() > 0.0)
+                .collect(Collectors.groupingBy(Episode::getSeason,
+                        Collectors.averagingDouble(Episode::getRating)));
+        System.out.println(ratingBySeason);
+
+        DoubleSummaryStatistics est = epsodes.stream()
+                .filter(e -> e.getRating() > 0.0)
+                .collect(Collectors.summarizingDouble(Episode::getRating));
+
+        System.out.printf("Average: %.2f\n", est.getAverage());
+        System.out.println("Best epsode: " + est.getMax());
+        System.out.println("Worst Epsode: " + est.getMin());
+        System.out.println("Count: " + est.getCount());
+
     }
 }
